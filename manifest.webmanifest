@@ -1,6 +1,6 @@
 {
-  "name": "Controle de Entregas",
-  "short_name": "Entregas",
+  "name": "Controle de Entregas - Wandeson Express",
+  "short_name": "Wandeson Express",
   "description": "Painel de gerenciamento e relatórios de entregas",
   "start_url": "./",
   "scope": "./",
