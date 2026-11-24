@@ -63,7 +63,8 @@ updateMonthlySummary();
 }
 
 function updateMonthlySummary(){
-13362const [yy,mm]=month?month.split("-"):[];$("monthlyPrintMonth").textContent=month?"Mês de referência: "+new Date(Number(yy),Number(mm)-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"}):"Selecione um mês para gerar o fechamento.";\n
+const month=$("monthlyMonth").value;
+const [yy,mm]=month?month.split("-"):[];$("monthlyPrintMonth").textContent=month?"Mês de referência: "+new Date(Number(yy),Number(mm)-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"}):"Selecione um mês para gerar o fechamento.";
 const monthRecords=records.filter(r=>month&&String(r.data||"").startsWith(month));
 $("monthlyCount").textContent=monthRecords.length;
 $("monthlyTotal").textContent=money(monthRecords.reduce((sum,r)=>sum+Number(r.valor),0));
