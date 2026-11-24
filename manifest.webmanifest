@@ -1,0 +1,18 @@
+{
+  "name": "Controle de Entregas",
+  "short_name": "Entregas",
+  "description": "Painel de gerenciamento e relatórios de entregas",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f4",
+  "theme_color": "#173d35",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
