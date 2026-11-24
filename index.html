@@ -1,16 +1,18 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Controle de Entregas</title>
+<meta name="theme-color" content="#173d35"><meta name="description" content="Painel de gerenciamento e relatórios de entregas"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Entregas">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--g:#173d35;--bg:#f3f6f4;--line:#dce5e0}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial,sans-serif;color:#18231f}
 header{margin:12px;background:var(--g);color:white;border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}header h1{font-size:21px;margin:0 0 7px}header small{color:#d8e9e1}header .ico{font-size:27px}
-main{max-width:1200px;margin:18px auto;padding:0 14px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card,.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:16px}.muted{color:#66756e}.num{font-size:25px;font-weight:bold;margin-top:8px}.green{color:var(--g)}
+.connection{max-width:1200px;margin:8px auto 0;padding:8px 14px;color:#52625a;font-size:12px}.connection.offline{color:#8a4b00;background:#fff4d9;border-radius:8px}.connection.online{color:#17613e}main{max-width:1200px;margin:18px auto;padding:0 14px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card,.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:16px}.muted{color:#66756e}.num{font-size:25px;font-weight:bold;margin-top:8px}.green{color:var(--g)}
 form.entry{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}label{display:grid;gap:5px;color:#52625a;font-size:12px}input,select{padding:10px;border:1px solid #cbd8d1;border-radius:7px;font:14px Arial;min-width:0}button{border:0;background:var(--g);color:white;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:bold}button.secondary{background:#e7eeea;color:var(--g)}button.danger{background:#fbe9e7;color:#9b2920}.wide{grid-column:span 2}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}.toolbar input{flex:1;min-width:220px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th{background:var(--g);color:white;text-align:left;padding:11px}td{padding:10px;border-bottom:1px solid var(--line)}tbody tr:nth-child(even){background:#f5f8f6}.money{text-align:right;white-space:nowrap}#auth{max-width:480px;margin:24px auto}.hidden{display:none}.msg{padding:10px;border-radius:8px;background:#fff4d9;margin-top:10px;white-space:pre-wrap}.right{display:flex;gap:8px;align-items:center;justify-content:flex-end}
-@media(max-width:720px){.stats{grid-template-columns:1fr 1fr}form.entry{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}}
+@media(max-width:720px){header{margin:6px;padding:15px 16px}header h1{font-size:18px}.stats{grid-template-columns:1fr 1fr;gap:8px}.card,.panel{padding:12px}.num{font-size:21px}form.entry{grid-template-columns:1fr 1fr;gap:9px}.wide{grid-column:span 2}.toolbar{gap:7px}.toolbar input{min-width:100%;width:100%}.toolbar button{flex:1}#auth{margin:16px 10px}main{margin:12px auto;padding:0 10px}.connection{padding:8px 10px}} @media(max-width:420px){.stats{grid-template-columns:1fr 1fr}form.entry{grid-template-columns:1fr}.wide{grid-column:span 1}.right{flex-wrap:wrap}.right #who{max-width:65%;overflow-wrap:anywhere}}
 @media print{header{margin:0}button,.toolbar,#entry,.no-print{display:none!important}body{background:white}.panel,.card{border:0}}
 </style></head><body>
 <header><div><h1>CONTROLE DE ENTREGAS</h1><small>PAINEL DE GERENCIAMENTO E RELATÓRIOS</small></div><div class="ico">⬡</div></header>
+<div id="connectionStatus" class="connection online" role="status">● Conectado — os registros são sincronizados pela internet.</div>
 <section id="auth" class="panel">
 <h3>Acessar Controle de Entregas</h3><p class="muted">Crie sua conta e use o mesmo e-mail e senha no celular e no computador para acessar os mesmos registros.</p>
 <form id="authForm" class="entry" style="grid-template-columns:1fr">
@@ -48,5 +50,13 @@ $("form").addEventListener("submit",async e=>{e.preventDefault();clearMsg("appMs
 window.removeRow=async id=>{if(!confirm("Excluir esta ordem de serviço?"))return;const {error}=await sb.from("entregas").delete().eq("id",id);if(error)msg("appMsg","Erro ao excluir: "+error.message);else await load()};
 $("search").addEventListener("input",render);$("filterDate").addEventListener("change",render);$("clearDate").onclick=()=>{$("filterDate").value="";render()};
 $("csv").onclick=()=>{const lines=[["Data","Loja","Vendedor","ordem de serviço","Endereços","Motivo","Valor"],...records.map(r=>[dateBR(r.data),r.loja,r.vendedor,r.ordem_servico,r.enderecos,r.motivo,r.valor])];const csv="\ufeff"+lines.map(a=>a.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="relatorio_entregas.csv";a.click();URL.revokeObjectURL(a.href)};
-$("print").onclick=()=>window.print();sb.auth.onAuthStateChange(()=>setTimeout(refresh,0));refresh();
+$("print").onclick=()=>window.print();
+function updateConnectionStatus(){
+ const el=$("connectionStatus");
+ if(navigator.onLine){el.textContent="● Conectado — os registros são sincronizados pela internet.";el.className="connection online"}
+ else{el.textContent="● Sem internet — o aplicativo pode abrir, mas consultar, cadastrar e sincronizar entregas exige conexão.";el.className="connection offline"}
+}
+window.addEventListener("online",updateConnectionStatus);window.addEventListener("offline",updateConnectionStatus);updateConnectionStatus();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(err=>console.warn("Não foi possível ativar o cache do aplicativo:",err)))}
+sb.auth.onAuthStateChange(()=>setTimeout(refresh,0));refresh();
 </script></body></html>
