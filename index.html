@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Controle de Entregas</title>
-<meta name="theme-color" content="#173d35"><meta name="description" content="Painel de gerenciamento e relatórios de entregas"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Entregas">
+<title>Controle de Entregas | Wandeson Express</title>
+<meta name="theme-color" content="#173d35"><meta name="description" content="Painel de gerenciamento e relatórios de entregas"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Wandeson Express">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--g:#173d35;--bg:#f3f6f4;--line:#dce5e0}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial,sans-serif;color:#18231f}
@@ -22,7 +22,7 @@ form.entry{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:
 @media(max-width:520px){.welcome{padding:15px}.welcome h2{font-size:19px}.quick-actions{grid-template-columns:1fr}.quick{padding:11px}.quick b{font-size:13px}.quick small{font-size:11px}}
 @media print{.welcome,.quick-actions{display:none!important}}\n@media print{body.monthly-print #app> :not(#monthlyPanel){display:none!important}body.monthly-print #app{display:block!important;position:static!important;width:100%!important;margin:0!important;padding:0!important}body.monthly-print #monthlyPanel{display:block!important;position:static!important;width:100%!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;color:#111!important}body.monthly-print #monthlyPanel .no-print{display:none!important}body.monthly-print #monthlyPanel .tablewrap{overflow:visible!important}body.monthly-print #monthlyPanel table{min-width:0!important;width:100%!important;border-collapse:collapse!important}body.monthly-print #monthlyPanel th,body.monthly-print #monthlyPanel td{padding:9px!important;border:1px solid #d7dfdc!important;color:#111!important}body.monthly-print #monthlyPanel th{background:#173d35!important;color:#fff!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}body.monthly-print #monthlyPanel .stats{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:10px!important}body.monthly-print #monthlyPanel .card{border:1px solid #d7dfdc!important;box-shadow:none!important;break-inside:avoid}body.monthly-print #monthlyPanel h3{font-size:20px!important;margin:0 0 8px!important}body.monthly-print #monthlyPanel h4{margin-top:22px!important}body.monthly-print #monthlyPanel p{color:#444!important}@page{size:A4 portrait;margin:16mm}}
 </style></head><body>
-<header><div><h1>CONTROLE DE ENTREGAS</h1><small>GESTÃO SIMPLES, RÁPIDA E ORGANIZADA</small></div><div class="ico">⬡</div></header>
+<header><div><h1>CONTROLE DE ENTREGAS</h1><small>WANDESON EXPRESS</small></div><div class="ico">⬡</div></header>
 <div id="connectionStatus" class="connection online" role="status">● Conectado — os registros são sincronizados pela internet.</div>
 <section id="auth" class="panel">
 <h3>Acessar Controle de Entregas</h3><p class="muted">Crie sua conta e use o mesmo e-mail e senha no celular e no computador para acessar os mesmos registros.</p>
