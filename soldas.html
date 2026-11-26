@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173d35"><meta name="description" content="Controle de Consertos e Soldas"><link rel="manifest" href="./soldas-manifest.webmanifest"><link rel="icon" href="./soldas-icon.svg" type="image/svg+xml"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Controle Soldas">
 <title>Controle de Consertos / Soldas</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -80,4 +81,5 @@ $('printBtn').onclick=()=>window.print();
 $('csvBtn').onclick=()=>{const headers=['Data','Loja','Vendedor','Descrição','Valor','Previsão de entrega','Local','Pagamento','Data do pagamento'];const lines=[headers,...records.map(r=>[dateBR(r.data),r.loja,r.vendedor,r.descricao,Number(r.valor).toFixed(2).replace('.',','),dateBR(r.previsao),r.local,r.pagamento||'A RECEBER',dateBR(r.data_pagamento)])];const csv='\ufeff'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='controle_consertos_soldas.csv';a.click();URL.revokeObjectURL(a.href)};
 db.auth.getSession().then(async({data})=>{if(data.session){showApp(true);await load()}else showApp(false)});
 db.auth.onAuthStateChange((_event,session)=>{if(!session)showApp(false)});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./soldas-sw.js').catch(err=>console.warn('Falha ao ativar o aplicativo instalável:',err)));}
 </script></body></html>
