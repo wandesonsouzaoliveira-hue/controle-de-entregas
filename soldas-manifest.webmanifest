@@ -1,0 +1,19 @@
+{
+  "name": "Controle de Consertos / Soldas",
+  "short_name": "Controle Soldas",
+  "description": "Painel de gerenciamento e acompanhamento de consertos e soldas",
+  "id": "./soldas.html",
+  "start_url": "./soldas.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f4",
+  "theme_color": "#173d35",
+  "icons": [
+    {
+      "src": "./soldas-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
