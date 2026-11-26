@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Controle de Consertos / Soldas</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--green:#173d35;--green2:#24594d;--bg:#f3f6f4;--line:#dce5df;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px Arial,sans-serif;color:#1d2924}
+header{background:var(--green);color:white;padding:24px 18px;text-align:center}header h1{margin:0;font-size:25px}header p{margin:8px 0 0;color:#d7e8df}
+main{max-width:1180px;margin:22px auto;padding:0 14px}.panel{background:white;border:1px solid var(--line);border-radius:13px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #173d350d}
+h2{font-size:18px;margin:0 0 15px;color:var(--green)}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}input{width:100%;padding:11px;border:1px solid #cbd7d0;border-radius:8px;font-size:15px;background:white}
+button{border:0;border-radius:8px;padding:11px 15px;font-weight:700;cursor:pointer;background:var(--green);color:white}button.secondary{background:#e7efea;color:var(--green)}button.danger{background:#fff0ee;color:var(--red)}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.stats{display:flex;gap:12px;flex-wrap:wrap}.stat{background:#edf4ef;border-radius:10px;padding:13px 17px;min-width:180px}.stat small{display:block;color:#52645a}.stat strong{font-size:22px;color:var(--green)}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.filters input{max-width:300px}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:11px 9px;text-align:left;border-bottom:1px solid var(--line)}th{background:#edf4ef;color:var(--green);font-size:12px}td{font-size:14px}.empty{text-align:center;color:#69776f;padding:25px}
+#login{max-width:430px;margin:35px auto}.hidden{display:none!important}.status{font-size:13px;color:#52645a;margin-top:8px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.grid{grid-template-columns:1fr}header h1{font-size:21px}.panel{padding:14px}}
+@media print{header{background:white;color:black}header p{color:black}.no-print,#login{display:none!important}body{background:white}.panel{box-shadow:none}}
+</style></head>
+<body>
+<header><h1>CONTROLE DE CONSERTOS / SOLDAS</h1><p>PAINEL DE GERENCIAMENTO E ACOMPANHAMENTO</p></header>
+<main>
+<section id="login" class="panel">
+<h2>Acesso ao aplicativo</h2>
+<label>E-mail</label><input id="email" type="email" autocomplete="username" placeholder="Seu e-mail">
+<label style="margin-top:12px">Senha</label><input id="password" type="password" autocomplete="current-password" placeholder="Sua senha">
+<div class="actions"><button id="loginBtn">Entrar</button><button class="secondary" id="signupBtn">Criar cadastro</button></div>
+<div id="loginMsg" class="status"></div>
+</section>
+<div id="app" class="hidden">
+<section class="panel no-print">
+<div class="actions" style="justify-content:space-between;margin-top:0"><h2 style="margin:8px 0">Cadastro de serviço</h2><button class="secondary" id="logoutBtn">Sair</button></div>
+<form id="serviceForm">
+<input type="hidden" id="editId">
+<div class="grid">
+<div><label for="data">Data</label><input id="data" type="date" required></div>
+<div><label for="loja">Loja</label><input id="loja" required placeholder="Ex.: 12"></div>
+<div><label for="vendedor">Vendedor</label><input id="vendedor" required placeholder="Nome do vendedor"></div>
+<div><label for="valor">Valor (R$)</label><input id="valor" type="number" min="0" step="0.01" required placeholder="0,00"></div>
+<div style="grid-column:span 2"><label for="descricao">Descrição</label><input id="descricao" required placeholder="Descrição do conserto ou solda"></div>
+<div><label for="previsao">Previsão de entrega</label><input id="previsao" type="date" required></div>
+<div><label for="local">Local</label><input id="local" required placeholder="Responsável / local"></div>
+</div>
+<div class="actions"><button type="submit" id="saveBtn">Salvar serviço</button><button type="button" class="secondary" id="clearBtn">Limpar</button></div>
+<div id="formMsg" class="status"></div>
+</form></section>
+<section class="panel"><div class="stats"><div class="stat"><small>Quantidade de serviços</small><strong id="count">0</strong></div><div class="stat"><small>Valor total</small><strong id="total">R$ 0,00</strong></div></div></section>
+<section class="panel"><h2>Serviços cadastrados</h2>
+<div class="filters no-print"><input id="search" placeholder="Pesquisar loja, vendedor, descrição ou local"><input id="from" type="date" aria-label="Data inicial"><input id="to" type="date" aria-label="Data final"><button class="secondary" id="clearFilters">Limpar filtros</button><button class="secondary" id="csvBtn">Exportar CSV</button><button class="secondary" id="printBtn">Imprimir / PDF</button></div>
+<div class="tablewrap"><table><thead><tr><th>DATA</th><th>LOJA</th><th>VENDEDOR</th><th>DESCRIÇÃO</th><th>VALOR</th><th>PREVISÃO DE ENTREGA</th><th>LOCAL</th><th class="no-print">AÇÕES</th></tr></thead><tbody id="rows"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody></table></div>
+</section>
+</div></main>
+<script>
+const SUPABASE_URL='https://vomorcjqwqbutcweuwov.supabase.co';
+const SUPABASE_KEY='sb_publishable_78RDBg4nhOMiRIIuGBwkeg_puke0-5';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let records=[];
+const $=id=>document.getElementById(id);
+const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dateBR=v=>v?new Date(v+'T12:00:00').toLocaleDateString('pt-BR'):'';
+function message(id,msg){$(id).textContent=msg}
+function clearForm(){$('serviceForm').reset();$('editId').value='';$('saveBtn').textContent='Salvar serviço';message('formMsg','')}
+function showApp(on){$('login').classList.toggle('hidden',on);$('app').classList.toggle('hidden',!on)}
+async function load(){const {data,error}=await db.from('consertos_solda').select('*').order('data',{ascending:false}).order('created_at',{ascending:false});if(error){message('formMsg','Erro ao carregar: '+error.message);return}records=data||[];render()}
+function render(){const term=$('search').value.toLowerCase();const from=$('from').value;const to=$('to').value;const list=records.filter(r=>[r.loja,r.vendedor,r.descricao,r.local].join(' ').toLowerCase().includes(term)&&(!from||r.data>=from)&&(!to||r.data<=to));$('count').textContent=list.length;$('total').textContent=money(list.reduce((s,r)=>s+Number(r.valor||0),0));$('rows').innerHTML=list.length?list.map(r=>'<tr><td>'+dateBR(r.data)+'</td><td>'+esc(r.loja)+'</td><td>'+esc(r.vendedor)+'</td><td>'+esc(r.descricao)+'</td><td>'+money(r.valor)+'</td><td>'+dateBR(r.previsao)+'</td><td>'+esc(r.local)+'</td><td class="no-print"><button class="secondary" onclick="editRecord(\''+r.id+'\')">Editar</button> <button class="danger" onclick="deleteRecord(\''+r.id+'\')">Excluir</button></td></tr>').join(''):'<tr><td colspan="8" class="empty">Nenhum serviço encontrado.</td></tr>'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+window.editRecord=id=>{const r=records.find(x=>x.id===id);if(!r)return;$('editId').value=r.id;$('data').value=r.data;$('loja').value=r.loja;$('vendedor').value=r.vendedor;$('descricao').value=r.descricao;$('valor').value=r.valor;$('previsao').value=r.previsao;$('local').value=r.local;$('saveBtn').textContent='Atualizar serviço';window.scrollTo({top:0,behavior:'smooth'})}
+window.deleteRecord=async id=>{if(!confirm('Deseja realmente excluir este serviço?'))return;const {error}=await db.from('consertos_solda').delete().eq('id',id);if(error)alert('Erro ao excluir: '+error.message);else await load()}
+$('serviceForm').addEventListener('submit',async e=>{e.preventDefault();const payload={data:$('data').value,loja:$('loja').value.trim(),vendedor:$('vendedor').value.trim(),descricao:$('descricao').value.trim(),valor:Number($('valor').value),previsao:$('previsao').value,local:$('local').value.trim()};const id=$('editId').value;const q=id?db.from('consertos_solda').update(payload).eq('id',id):db.from('consertos_solda').insert(payload);const {error}=await q;if(error){message('formMsg','Não foi possível salvar: '+error.message);return}clearForm();message('formMsg','Serviço salvo com sucesso.');await load()});
+$('loginBtn').onclick=async()=>{const {error}=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});message('loginMsg',error?error.message:'Acesso realizado.');if(!error){showApp(true);await load()}};
+$('signupBtn').onclick=async()=>{const {error}=await db.auth.signUp({email:$('email').value,password:$('password').value});message('loginMsg',error?error.message:'Cadastro solicitado. Verifique seu e-mail se a confirmação estiver ativada.')};
+$('logoutBtn').onclick=async()=>{await db.auth.signOut();showApp(false)};
+$('clearBtn').onclick=clearForm;$('search').oninput=render;$('from').onchange=render;$('to').onchange=render;
+$('clearFilters').onclick=()=>{$('search').value='';$('from').value='';$('to').value='';render()};
+$('printBtn').onclick=()=>window.print();
+$('csvBtn').onclick=()=>{const headers=['Data','Loja','Vendedor','Descrição','Valor','Previsão de entrega','Local'];const lines=[headers,...records.map(r=>[dateBR(r.data),r.loja,r.vendedor,r.descricao,Number(r.valor).toFixed(2).replace('.',','),dateBR(r.previsao),r.local])];const csv='\ufeff'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='controle_consertos_soldas.csv';a.click();URL.revokeObjectURL(a.href)};
+db.auth.getSession().then(async({data})=>{if(data.session){showApp(true);await load()}else showApp(false)});
+db.auth.onAuthStateChange((_event,session)=>{if(!session)showApp(false)});
+</script></body></html>
