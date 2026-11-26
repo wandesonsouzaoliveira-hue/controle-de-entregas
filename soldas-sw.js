@@ -1,4 +1,4 @@
-const CACHE_NAME = "controle-soldas-pwa-v1";
+const CACHE_NAME = "controle-soldas-pwa-v2";
 const APP_SHELL = ["./soldas.html", "./soldas-manifest.webmanifest", "./soldas-icon.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
