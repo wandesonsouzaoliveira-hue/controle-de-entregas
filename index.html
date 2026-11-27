@@ -2,6 +2,8 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Controle de Entregas | Wandeson Express</title>
 <meta name="theme-color" content="#173d35"><meta name="description" content="Painel de gerenciamento e relatórios de entregas"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Wandeson Express">
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--g:#173d35;--bg:#f3f6f4;--line:#dce5e0}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial,sans-serif;color:#18231f}
@@ -34,7 +36,7 @@ form.entry{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:
 <section class="panel" id="entry" style="margin-top:14px"><h3>Adicionar ordem de serviço</h3><form id="form" class="entry">
 <label>Data<input id="date" type="date" required></label><label>Loja<input id="store" required></label><label>Vendedor<input id="seller" required></label><label>Ordem de serviço<input id="order" required></label>
 <label class="wide">Endereços<input id="address" required></label><label>Motivo<select id="reason"><option>Entrega</option><option>Retirada</option><option>Retorno</option><option>Transferência de Peças</option></select></label><label>Valor (R$)<input id="value" type="number" min="0" step=".01" required></label><button class="wide" id="saveEntry">Adicionar ao relatório</button><button type="button" class="secondary wide hidden" id="cancelEdit">Cancelar edição</button></form><div id="appMsg" class="msg hidden"></div></section>
-<section class="panel" id="report" style="margin-top:14px"><h3>Relatório de entregas</h3><div class="toolbar"><input id="search" placeholder="Buscar por loja, vendedor, OS ou endereço"><label>De<input id="dateFrom" type="date"></label><label>Até<input id="dateTo" type="date"></label><select id="filterSeller" aria-label="Filtrar por vendedor"><option value="">Todos os vendedores</option></select><button class="secondary" id="clearFilters">Limpar filtros</button><button id="csv">Exportar CSV</button><button id="print">Imprimir / salvar PDF</button></div>
+<section class="panel" id="report" style="margin-top:14px"><h3>Relatório de entregas</h3><div class="toolbar"><input id="search" placeholder="Buscar por loja, vendedor, OS ou endereço"><label>De<input id="dateFrom" type="date"></label><label>Até<input id="dateTo" type="date"></label><select id="filterSeller" aria-label="Filtrar por vendedor"><option value="">Todos os vendedores</option></select><button class="secondary" id="clearFilters">Limpar filtros</button><button id="csv">Exportar CSV</button><button id="print">Imprimir / salvar PDF</button><button id="sharePdf">Compartilhar PDF</button></div>
 <div class="tablewrap"><table><thead><tr><th>Data</th><th>Loja</th><th>Vendedor</th><th>ordem de serviço</th><th>Endereços</th><th>Motivo</th><th class="money">Valor</th><th></th></tr></thead><tbody id="rows"></tbody></table></div><p class="money"><b>TOTAL: <span id="filteredTotal">R$ 0,00</span></b></p></section>
 <section class="panel" id="monthlyPanel" style="margin-top:14px"><div class="right no-print"><button id="monthlyPdf">Imprimir / salvar fechamento em PDF</button></div><h3>Fechamento mensal</h3><p id="monthlyPrintMonth" class="muted"></p><div class="toolbar no-print"><label>Mês de referência<input type="month" id="monthlyMonth"></label></div><div class="stats"><div class="card"><div class="muted">Entregas no mês</div><div class="num" id="monthlyCount">0</div></div><div class="card"><div class="muted">Faturamento do mês</div><div class="num green" id="monthlyTotal">R$ 0,00</div></div><div class="card"><div class="muted">Vendedores no mês</div><div class="num" id="monthlySellers">0</div></div></div><h4>Faturamento por vendedor</h4><div class="tablewrap"><table><thead><tr><th>Vendedor</th><th>Entregas</th><th>Faturamento</th></tr></thead><tbody id="monthlySellerRows"></tbody></table></div><p class="muted">Este fechamento considera todos os registros do mês selecionado, independentemente dos filtros do relatório.</p></section><section class="panel" id="summaryPanel" style="margin-top:14px"><h3>Resumo por loja e vendedor</h3><div id="summary"></div></section></main>
 <script>
@@ -90,6 +92,38 @@ window.removeRow=async id=>{if(!confirm("Excluir esta ordem de serviço?"))retur
 $("monthlyMonth").value=new Date().toISOString().slice(0,7);$("monthlyMonth").addEventListener("change",updateMonthlySummary);$("monthlyPdf").onclick=()=>{updateMonthlySummary();document.body.classList.add("monthly-print");window.addEventListener("afterprint",()=>document.body.classList.remove("monthly-print"),{once:true});window.print()};$("search").addEventListener("input",render);$("dateFrom").addEventListener("change",render);$("dateTo").addEventListener("change",render);$("filterSeller").addEventListener("change",render);$("clearFilters").onclick=()=>{$("search").value="";$("dateFrom").value="";$("dateTo").value="";$("filterSeller").value="";render()};
 $("csv").onclick=()=>{const q=$("search").value.toLowerCase(),from=$("dateFrom").value,to=$("dateTo").value,seller=$("filterSeller").value;const filtered=records.filter(r=>(!from||r.data>=from)&&(!to||r.data<=to)&&(!seller||r.vendedor===seller)&&[r.data,r.loja,r.vendedor,r.ordem_servico,r.enderecos,r.motivo].join(" ").toLowerCase().includes(q));const lines=[["Data","Loja","Vendedor","ordem de serviço","Endereços","Motivo","Valor"],...filtered.map(r=>[dateBR(r.data),r.loja,r.vendedor,r.ordem_servico,r.enderecos,r.motivo,r.valor])];const csv="\ufeff"+lines.map(a=>a.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="relatorio_entregas.csv";a.click();URL.revokeObjectURL(a.href)};
 $("print").onclick=()=>window.print();
+$("sharePdf").onclick=async()=>{
+  const button=$("sharePdf");
+  const q=$("search").value.toLowerCase(),from=$("dateFrom").value,to=$("dateTo").value,seller=$("filterSeller").value;
+  const filtered=records.filter(r=>(!from||r.data>=from)&&(!to||r.data<=to)&&(!seller||r.vendedor===seller)&&[r.data,r.loja,r.vendedor,r.ordem_servico,r.enderecos,r.motivo].join(" ").toLowerCase().includes(q));
+  if(!window.jspdf?.jsPDF){msg("appMsg","Não foi possível carregar o gerador de PDF. Verifique a conexão com a internet e tente novamente.");return}
+  button.disabled=true;button.textContent="Gerando PDF...";
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    doc.setFontSize(16);doc.text("CONTROLE DE ENTREGAS — WANDESON EXPRESS",14,16);
+    doc.setFontSize(10);doc.text("Relatório de entregas",14,23);
+    const period=[from?"De: "+dateBR(from):"",to?"Até: "+dateBR(to):""].filter(Boolean).join(" | ");
+    if(period)doc.text(period,14,29);
+    doc.autoTable({startY:period?34:29,head:[["Data","Loja","Vendedor","Ordem de serviço","Endereço","Motivo","Valor"]],
+      body:filtered.map(r=>[dateBR(r.data),r.loja||"",r.vendedor||"",r.ordem_servico||"",r.enderecos||"",r.motivo||"",money(r.valor)]),
+      styles:{fontSize:8,cellPadding:2,overflow:"linebreak"},headStyles:{fillColor:[23,61,53]},
+      columnStyles:{6:{halign:"right"}},didDrawPage:()=>{doc.setFontSize(8);doc.text("Wandeson Express",doc.internal.pageSize.getWidth()-14,doc.internal.pageSize.getHeight()-7,{align:"right"})}});
+    const total=filtered.reduce((sum,r)=>sum+Number(r.valor),0);
+    doc.setFontSize(11);doc.text("Quantidade: "+filtered.length+"    Total: "+money(total),14,(doc.lastAutoTable?.finalY||35)+9);
+    const blob=doc.output("blob");
+    const file=new File([blob],"relatorio_entregas.pdf",{type:"application/pdf"});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:"Relatório de entregas",text:"Relatório de entregas — Wandeson Express"});
+      msg("appMsg","PDF preparado para compartilhamento.");
+    }else{
+      doc.save("relatorio_entregas.pdf");
+      msg("appMsg","PDF baixado. No celular, abra o arquivo e use Compartilhar para enviar pelo WhatsApp.");
+    }
+  }catch(err){
+    if(err?.name!=="AbortError")msg("appMsg","Não foi possível compartilhar o PDF: "+(err?.message||"tente novamente."));
+  }finally{button.disabled=false;button.textContent="Compartilhar PDF"}
+};
 function updateConnectionStatus(){
  const el=$("connectionStatus");
  if(navigator.onLine){el.textContent="● Conectado — os registros são sincronizados pela internet.";el.className="connection online"}
