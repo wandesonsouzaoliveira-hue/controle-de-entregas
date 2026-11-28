@@ -140,7 +140,7 @@ $("sharePdf").onclick=async()=>{
     const period=[from?"De: "+dateBR(from):"",to?"Até: "+dateBR(to):""].filter(Boolean).join(" | ");
     if(period)doc.text(period,14,29);
     doc.autoTable({startY:period?34:29,head:[["Data","Loja","Vendedor","Ordem de serviço","Endereço","Motivo","Valor da entrega","Venda do produto"]],
-      body:filtered.map(r=>[dateBR(r.data),r.loja||"",r.vendedor||"",r.ordem_servico||"",r.enderecos||"",r.motivo||"",money(r.valor)]),
+      body:filtered.map(r=>[dateBR(r.data),r.loja||"",r.vendedor||"",r.ordem_servico||"",r.enderecos||"",r.motivo||"",money(r.valor),money(r.valor_venda||0)]),
       styles:{fontSize:8,cellPadding:2,overflow:"linebreak"},headStyles:{fillColor:[23,61,53]},
       columnStyles:{6:{halign:"right"}},didDrawPage:()=>{doc.setFontSize(8);doc.text("Wandeson Express",doc.internal.pageSize.getWidth()-14,doc.internal.pageSize.getHeight()-7,{align:"right"})}});
     const total=filtered.reduce((sum,r)=>sum+Number(r.valor),0);
