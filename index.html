@@ -82,7 +82,7 @@ $("monthlyCount").textContent=monthRecords.length;
 $("monthlyTotal").textContent=money(monthRecords.reduce((sum,r)=>sum+Number(r.valor),0));
 const totals={};monthRecords.forEach(r=>{const name=r.vendedor||"Sem vendedor";totals[name]??={count:0,value:0};totals[name].count++;totals[name].value+=Number(r.valor)});
 $("monthlySellers").textContent=Object.keys(totals).length;
-$("monthlySellerRows").innerHTML=Object.entries(totals).sort((a,b)=>a[0].localeCompare(b[0],"pt-BR")).map(([name,v])=>"<tr><td>"+esc(name)+"</td><td>"+v.count+"</td><td>"+money(v.value)+"</td></tr>").join("")||'<tr><td colspan="3">Nenhuma entrega neste mês.</td></tr>';
+$("monthlySellerRows").innerHTML=Object.entries(totals).sort((a,b)=>b[1].value-a[1].value).map(([name,v])=>"<tr><td>"+esc(name)+"</td><td>"+v.count+"</td><td>"+money(v.value)+"</td></tr>").join("")||'<tr><td colspan="3">Nenhuma entrega neste mês.</td></tr>';
 }
 
 async function startRealtime(){if(liveChannel)await sb.removeChannel(liveChannel);liveChannel=sb.channel("entregas-live").on("postgres_changes",{event:"*",schema:"public",table:"entregas"},()=>load()).subscribe()}
