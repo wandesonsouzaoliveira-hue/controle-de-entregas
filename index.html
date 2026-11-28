@@ -69,7 +69,7 @@ const list=records.filter(r=>(!from||r.data>=from)&&(!to||r.data<=to)&&(!activeS
 $("count").textContent=records.length;$("total").textContent=money(records.reduce((s,r)=>s+Number(r.valor),0));$("sellers").textContent=new Set(records.map(r=>r.vendedor)).size;
 $("rows").innerHTML=list.map(r=>"<tr><td>"+dateBR(r.data)+"</td><td>"+esc(r.loja)+"</td><td>"+esc(r.vendedor)+"</td><td class=\""+(isPendingOrder(r.ordem_servico)?"pending-os-cell":"")+"\">"+esc(r.ordem_servico)+(isPendingOrder(r.ordem_servico)?" — PENDENTE":"")+"</td><td>"+esc(r.enderecos)+"</td><td>"+esc(r.motivo)+"</td><td class=\"money\">"+money(r.valor)+"</td><td><button class=\"secondary\" onclick=\"editRow('"+esc(r.id)+"')\">Editar</button> <button class=\"danger\" onclick=\"removeRow('"+esc(r.id)+"')\">Excluir</button></td></tr>").join("");
 $("filteredTotal").textContent=money(list.reduce((s,r)=>s+Number(r.valor),0));
-const groups=key=>{let m={};list.forEach(r=>{let k=r[key];m[k]??={n:0,v:0};m[k].n++;m[k].v+=Number(r.valor)});return Object.entries(m).sort().map(([k,v])=>"<tr><td>"+esc(k)+"</td><td>"+v.n+"</td><td>"+money(v.v)+"</td></tr>").join("")};
+const groups=key=>{let m={};list.forEach(r=>{let k=r[key];m[k]??={n:0,v:0};m[k].n++;m[k].v+=Number(r.valor)});return Object.entries(m).sort((a,b)=>b[1].v-a[1].v).map(([k,v])=>"<tr><td>"+esc(k)+"</td><td>"+v.n+"</td><td>"+money(v.v)+"</td></tr>").join("")};
 $("summary").innerHTML="<h4>Por loja</h4><table><tr><th>Loja</th><th>Serviços</th><th>Valor</th></tr>"+groups("loja")+"</table><h4>Por vendedor</h4><table><tr><th>Vendedor</th><th>Serviços</th><th>Valor</th></tr>"+groups("vendedor")+"</table>";
 updateMonthlySummary();
 }
